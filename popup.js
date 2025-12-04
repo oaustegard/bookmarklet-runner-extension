@@ -450,18 +450,26 @@
   function createBookmarkletItem(bm) {
     const item = document.createElement('div');
     item.className = 'bookmarklet-item';
-    
-    const readmeLink = bm.readmeUrl 
-      ? `<a href="${escapeHtml(bm.readmeUrl)}" target="_blank" class="readme-link" title="View README" onclick="event.stopPropagation()">📖</a>`
+
+    const readmeLink = bm.readmeUrl
+      ? `<a href="${escapeHtml(bm.readmeUrl)}" target="_blank" class="readme-link" title="View README">📖</a>`
       : '';
-    
+
     item.innerHTML = `
       <div class="bookmarklet-name">${escapeHtml(bm.name)}</div>
       <div class="bookmarklet-desc"><span class="bookmarklet-desc-text">${escapeHtml(bm.description)}</span>${readmeLink}</div>
     `;
-    
+
     item.addEventListener('click', () => executeBookmarklet(bm));
-    
+
+    /* Attach event listener to readme link to prevent propagation */
+    if (bm.readmeUrl) {
+      const linkEl = item.querySelector('.readme-link');
+      if (linkEl) {
+        linkEl.addEventListener('click', (e) => e.stopPropagation());
+      }
+    }
+
     return item;
   }
 
