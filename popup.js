@@ -223,40 +223,47 @@
       description: null,
       domains: []
     };
-    
+
     /* Extract header comments (between javascript: and first function/IIFE) */
     const headerMatch = code.match(/^javascript:\s*([\s\S]*?)(?=\(function|\(\s*function|\(\s*\(\s*\)|\(\s*async)/i);
-    const header = headerMatch ? headerMatch[1] : code.slice(0, 500);
-    
+    const header = headerMatch ? headerMatch[1] : '';
+
+    /* Also extract the beginning of the function body for comments inside the IIFE */
+    const bodyMatch = code.match(/^javascript:.*?\(function[^{]*\{([\s\S]{0,800})/i);
+    const body = bodyMatch ? bodyMatch[1] : '';
+
+    /* Combine both areas to search for metadata */
+    const searchArea = header + '\n' + body;
+
     /* Parse @title */
-    const titleMatch = header.match(/@title[:\s]+([^\n*@]+)/i);
+    const titleMatch = searchArea.match(/@title[:\s]+([^\n*@]+)/i);
     if (titleMatch) {
       result.title = titleMatch[1].trim();
     }
-    
+
     /* Parse @description */
-    const descMatch = header.match(/@description[:\s]+([^\n*@]+)/i);
+    const descMatch = searchArea.match(/@description[:\s]+([^\n*@]+)/i);
     if (descMatch) {
       result.description = descMatch[1].trim();
     }
-    
+
     /* Parse @domains */
-    const domainsMatch = header.match(/@domains?[:\s]+([^\n*@]+)/i);
+    const domainsMatch = searchArea.match(/@domains?[:\s]+([^\n*@]+)/i);
     if (domainsMatch) {
       result.domains = domainsMatch[1]
         .split(/[,\s]+/)
         .map(d => d.trim().toLowerCase())
         .filter(d => d.length > 0);
     }
-    
+
     /* Fallbacks if metadata not present */
     if (!result.title) {
       result.title = filename.replace('.js', '').replace(/[-_]/g, ' ');
     }
-    
+
     if (!result.description) {
-      /* Try to find any descriptive comment */
-      const blockMatch = header.match(/\/\*\s*([\s\S]*?)\s*\*\//);
+      /* Try to find any descriptive comment in either location */
+      const blockMatch = searchArea.match(/\/\*\s*([\s\S]*?)\s*\*\//);
       if (blockMatch) {
         const lines = blockMatch[1].split('\n')
           .map(l => l.replace(/^\s*\*\s*/, '').trim())
@@ -269,7 +276,7 @@
         result.description = `Run ${result.title}`;
       }
     }
-    
+
     return result;
   }
 
