@@ -587,22 +587,9 @@
   /* Function injected into the page */
   function injectBookmarkletScript(code) {
     try {
-      /* Use blob URL to bypass CSP inline script restrictions */
-      /* This works because many CSPs (including Discord's) allow blob: sources */
-      const blob = new Blob([code], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-      const script = document.createElement('script');
-      script.src = url;
-
-      /* Clean up blob URL after script loads */
-      script.onload = () => URL.revokeObjectURL(url);
-      script.onerror = (e) => {
-        URL.revokeObjectURL(url);
-        console.error('Bookmarklet error:', e);
-        alert('Bookmarklet execution failed. Check the console for details.');
-      };
-
-      (document.head || document.documentElement).appendChild(script);
+      /* Execute directly like a real bookmarklet using eval() */
+      /* This works in the global scope, matching how bookmarklets execute from the address bar */
+      eval(code);
     } catch (err) {
       console.error('Bookmarklet error:', err);
       alert('Bookmarklet error: ' + err.message);
