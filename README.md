@@ -5,7 +5,7 @@ Run bookmarklets from the [oaustegard/bookmarklets](https://github.com/oaustegar
 ## Features
 
 - **One-click execution**: Run any bookmarklet on the current page instantly
-- **Domain filtering**: Bookmarklets with `@domains` metadata only appear on matching sites, and are hoisted to the top of the list
+- **Domain filtering**: Bookmarklets with `@domains` metadata only appear on matching sites, and are hoisted to the top of the list. Supports wildcards (e.g., `*jira*`)
 - **Auto-grouping**: Bookmarklets with common prefixes (e.g., `bsky_*`) are grouped into collapsible sections (collapsed by default)
 - **Search**: Filter bookmarklets by name, description, or filename
 - **README links**: Bookmarklets with companion README files show a 📖 link
@@ -27,7 +27,7 @@ The extension parses optional metadata from bookmarklet files:
 javascript:
 /* @title: My Bookmarklet Name */
 /* @description: What this bookmarklet does */
-/* @domains: example.com, sub.example.com */
+/* @domains: example.com, *jira* */
 (function() {
   /* actual code */
 })();
@@ -37,6 +37,11 @@ All `@` tags are optional:
 - **@title**: Display name (defaults to filename with underscores replaced by spaces)
 - **@description**: Brief description (defaults to first comment or "Run {title}")
 - **@domains**: Comma-separated list of domains. When specified, the bookmarklet **only appears** on matching sites. Bookmarklets without `@domains` appear everywhere.
+  - Supports wildcards for multi-instance tools:
+    - `*jira*` - matches any domain containing "jira" (e.g., `company.jira.com`, `jira.atlassian.net`, `myjira.example.com`)
+    - `jira*` - matches domains starting with "jira" (e.g., `jira.company.com`)
+    - `*jira` - matches domains ending with "jira" (e.g., `company.jira`)
+  - Mix exact and wildcard patterns: `@domains: github.com, *jira*, *confluence*`
 
 ## README Files
 
