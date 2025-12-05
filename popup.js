@@ -4,8 +4,12 @@
 (function() {
   'use strict';
 
-  const REPO_OWNER = 'oaustegard';
-  const REPO_NAME = 'bookmarklets';
+  /* Configuration - loaded from storage */
+  let REPO_OWNER = 'oaustegard';
+  let REPO_NAME = 'bookmarklets';
+  let FOLDER_PATH = '';
+
+  const CONFIG_KEY = 'repo_config';
   const GITHUB_API_BASE = 'https://api.github.com';
   const CACHE_KEY = 'bookmarklet_cache';
   const EXPANDED_KEY = 'expanded_groups';
@@ -30,7 +34,10 @@
 
   async function init() {
     console.log('Bookmarklet Runner: Initializing');
-    
+
+    /* Load repository configuration */
+    await loadRepoConfig();
+
     /* Get current tab domain */
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -42,7 +49,7 @@
     } catch (err) {
       console.log('Bookmarklet Runner: Could not get current domain', err);
     }
-    
+
     /* Load expanded state */
     try {
       const data = await chrome.storage.local.get(EXPANDED_KEY);
@@ -50,18 +57,36 @@
         expandedGroups = new Set(data[EXPANDED_KEY]);
       }
     } catch (err) { /* ignore */ }
-    
+
     /* Event listeners */
     searchInput.addEventListener('input', debounce(handleFilterChange, 100));
     refreshBtn.addEventListener('click', () => loadBookmarklets(true));
-    
+
     /* Global keyboard handler */
     document.addEventListener('keydown', handleKeydown);
-    
+
     /* Focus search on open */
     searchInput.focus();
-    
+
     await loadBookmarklets(false);
+  }
+
+  /* Load repository configuration from storage */
+  async function loadRepoConfig() {
+    try {
+      const data = await chrome.storage.local.get(CONFIG_KEY);
+      if (data[CONFIG_KEY]) {
+        const config = data[CONFIG_KEY];
+        REPO_OWNER = config.repoOwner || 'oaustegard';
+        REPO_NAME = config.repoName || 'bookmarklets';
+        FOLDER_PATH = config.folderPath || '';
+        console.log('Bookmarklet Runner: Loaded config', { REPO_OWNER, REPO_NAME, FOLDER_PATH });
+      } else {
+        console.log('Bookmarklet Runner: Using default config');
+      }
+    } catch (err) {
+      console.error('Bookmarklet Runner: Failed to load config', err);
+    }
   }
 
   /* Global keyboard handler */
@@ -598,17 +623,18 @@
 
   /* Fetch repo contents from GitHub API */
   async function fetchRepoContents() {
-    const url = `${GITHUB_API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
+    const path = FOLDER_PATH ? `/${FOLDER_PATH}` : '';
+    const url = `${GITHUB_API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents${path}`;
     console.log('Bookmarklet Runner: Fetching', url);
-    
+
     const response = await fetch(url, {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
-    
+
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
     }
-    
+
     return response.json();
   }
 
