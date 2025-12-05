@@ -224,16 +224,9 @@
       domains: []
     };
 
-    /* Extract header comments (between javascript: and first function/IIFE) */
-    const headerMatch = code.match(/^javascript:\s*([\s\S]*?)(?=\(function|\(\s*function|\(\s*\(\s*\)|\(\s*async)/i);
-    const header = headerMatch ? headerMatch[1] : '';
-
-    /* Also extract the beginning of the function body for comments inside the IIFE */
-    const bodyMatch = code.match(/^javascript:.*?\(function[^{]*\{([\s\S]{0,800})/i);
-    const body = bodyMatch ? bodyMatch[1] : '';
-
-    /* Combine both areas to search for metadata */
-    const searchArea = header + '\n' + body;
+    /* Search first 10 lines for metadata tags - works with any code structure */
+    const lines = code.split('\n').slice(0, 10);
+    const searchArea = lines.join('\n');
 
     /* Parse @title */
     const titleMatch = searchArea.match(/@title[:\s]+([^\n*@]+)/i);
@@ -247,7 +240,7 @@
       result.description = descMatch[1].trim();
     }
 
-    /* Parse @domains */
+    /* Parse @domains - supports wildcards like *jira* */
     const domainsMatch = searchArea.match(/@domains?[:\s]+([^\n*@]+)/i);
     if (domainsMatch) {
       result.domains = domainsMatch[1]
@@ -298,6 +291,18 @@
     if (!domain) return false;
 
     return bookmarklet.domains.some(d => {
+      /* Wildcard pattern (e.g., *jira*, jira*, *jira) */
+      if (d.includes('*')) {
+        /* Convert wildcard to regex: escape special chars, replace * with .* */
+        const regexPattern = d
+          .split('*')
+          .map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+          .join('.*');
+        /* Add anchors if wildcard doesn't start/end with * */
+        const pattern = '^' + regexPattern + '$';
+        const regex = new RegExp(pattern, 'i');
+        return regex.test(domain);
+      }
       /* Exact match or subdomain match */
       return domain === d || domain.endsWith('.' + d);
     });
