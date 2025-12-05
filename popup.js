@@ -294,9 +294,9 @@
   function matchesDomain(bookmarklet, domain) {
     /* No domain restriction = show everywhere */
     if (!bookmarklet.domains || bookmarklet.domains.length === 0) return true;
-    /* No current domain (e.g., new tab) = show everything */
-    if (!domain) return true;
-    
+    /* No current domain = only show bookmarklets with no domain restrictions */
+    if (!domain) return false;
+
     return bookmarklet.domains.some(d => {
       /* Exact match or subdomain match */
       return domain === d || domain.endsWith('.' + d);
