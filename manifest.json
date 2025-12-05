@@ -1,21 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Bookmarklet Runner",
-  "version": "1.4.1",
-  "description": "Run bookmarklets from oaustegard/bookmarklets repo without adding them to your bookmarks bar",
+  "version": "2.0.0",
+  "description": "Run bookmarklets from any GitHub repository without adding them to your bookmarks bar",
   "author": "Oskar Austegard",
-  
+
   "permissions": [
     "activeTab",
     "scripting",
     "storage"
   ],
-  
+
   "host_permissions": [
     "https://api.github.com/*",
     "https://raw.githubusercontent.com/*"
   ],
-  
+
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -26,7 +26,9 @@
     },
     "default_title": "Bookmarklet Runner (Alt+B)"
   },
-  
+
+  "options_page": "options.html",
+
   "commands": {
     "_execute_action": {
       "suggested_key": {
@@ -36,7 +38,7 @@
       "description": "Open Bookmarklet Runner"
     }
   },
-  
+
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

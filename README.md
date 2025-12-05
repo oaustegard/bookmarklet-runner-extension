@@ -1,6 +1,6 @@
 # Bookmarklet Runner Chrome Extension
 
-Run bookmarklets from the [oaustegard/bookmarklets](https://github.com/oaustegard/bookmarklets) repository directly without adding them to your bookmarks bar.
+Run bookmarklets from any GitHub repository directly without adding them to your bookmarks bar. Configure it to use your own bookmarklet collection or try the demo bookmarklets included in this repo!
 
 ## Features
 
@@ -19,9 +19,56 @@ Run bookmarklets from the [oaustegard/bookmarklets](https://github.com/oaustegar
 - **Persistent state**: Manually expanded groups stay expanded between sessions
 - **Auto-caching**: Fetches from GitHub once per hour, cached locally
 
-## Bookmarklet Metadata
+## Quick Start
 
-The extension parses optional metadata from bookmarklet files:
+### Try the Demo Bookmarklets
+
+1. Install the extension (see [Installation](#installation) below)
+2. Right-click the extension icon and select **Options**
+3. Configure the demo repository:
+   - **GitHub Owner**: `oaustegard`
+   - **Repository Name**: `bookmarklet-runner-extension`
+   - **Folder Path**: `demo-bookmarklets`
+4. Click **Save Settings**
+5. Press `Alt+B` to open the extension and explore the demo bookmarklets!
+
+The demo includes examples of:
+- Basic bookmarklets with custom titles and descriptions
+- Domain-specific bookmarklets (try the GitHub Stars counter on this repo!)
+- Auto-grouped bookmarklets (utils_* prefix)
+- Bookmarklets with README documentation
+
+### Use Your Own Repository
+
+1. Right-click the extension icon and select **Options**
+2. Enter your GitHub repository details:
+   - **GitHub Owner**: Your username or organization
+   - **Repository Name**: The repo containing your bookmarklets
+   - **Folder Path**: (optional) Subfolder path if bookmarklets aren't in the root
+3. Click **Save Settings**
+4. Open the extension with `Alt+B`
+
+The extension defaults to [oaustegard/bookmarklets](https://github.com/oaustegard/bookmarklets) - a collection of useful bookmarklets for various websites.
+
+## Creating Bookmarklets
+
+### File Structure
+
+Each bookmarklet is a `.js` file in your repository:
+
+```
+your-repo/
+├── hello_world.js
+├── github_stars.js
+├── github_stars_README.md  ← Optional documentation
+├── utils_copy_title.js     ← Auto-grouped by "utils_" prefix
+├── utils_copy_url.js
+└── utils_scroll_to_top.js
+```
+
+### Bookmarklet Metadata
+
+Add optional metadata to your bookmarklets using special comment tags:
 
 ```javascript
 javascript:
@@ -29,26 +76,74 @@ javascript:
 /* @description: What this bookmarklet does */
 /* @domains: example.com, *jira* */
 (function() {
-  /* actual code */
+  // Your code here
 })();
 ```
 
-All `@` tags are optional:
-- **@title**: Display name (defaults to filename with underscores replaced by spaces)
-- **@description**: Brief description (defaults to first comment or "Run {title}")
-- **@domains**: Comma-separated list of domains. When specified, the bookmarklet **only appears** on matching sites. Bookmarklets without `@domains` appear everywhere.
-  - Supports wildcards for multi-instance tools:
-    - `*jira*` - matches any domain containing "jira" (e.g., `company.jira.com`, `jira.atlassian.net`, `myjira.example.com`)
-    - `jira*` - matches domains starting with "jira" (e.g., `jira.company.com`)
-    - `*jira` - matches domains ending with "jira" (e.g., `company.jira`)
-  - Mix exact and wildcard patterns: `@domains: github.com, *jira*, *confluence*`
+#### Metadata Tags
 
-## README Files
+All tags are optional but highly recommended:
 
-Companion README files are automatically linked if they follow the naming convention:
-- `bookmarklet_name_README.md` or `bookmarklet_name.README.md`
+**@title** - Display name in the extension
+- Defaults to filename with underscores replaced by spaces
+- Example: `/* @title: Count GitHub Stars */`
 
-For example, `bsky_advanced_search.js` pairs with `bsky_advanced_search_README.md`.
+**@description** - Brief description shown below the title
+- Appears as subtitle in the extension UI
+- Defaults to first comment line or "Run {title}"
+- Example: `/* @description: Show the number of stars on a GitHub repository */`
+
+**@domains** - Domain filtering
+- Comma-separated list of domains where this bookmarklet should appear
+- When specified, bookmarklet **only appears** on matching sites
+- Bookmarklets without `@domains` appear everywhere
+- Supports wildcards for flexible matching:
+
+| Pattern | Matches | Example Domains |
+|---------|---------|-----------------|
+| `github.com` | Exact domain | `github.com`, `www.github.com` |
+| `*jira*` | Contains "jira" | `company.jira.com`, `jira.atlassian.net`, `myjira.example.com` |
+| `jira*` | Starts with "jira" | `jira.company.com` |
+| `*jira` | Ends with "jira" | `company.jira` |
+
+Mix patterns: `/* @domains: github.com, *jira*, *confluence* */`
+
+### README Documentation
+
+Create detailed documentation for your bookmarklets by adding README files:
+
+**Naming Convention:**
+- `bookmarklet_name.js` → `bookmarklet_name_README.md`
+- Alternative: `bookmarklet_name.README.md`
+
+**Example:**
+```
+github_stars.js
+github_stars_README.md  ← Extension shows 📖 link
+```
+
+The extension automatically detects README files and displays a 📖 link next to the bookmarklet. Clicking it opens the documentation on GitHub.
+
+See [demo-bookmarklets/github_stars_README.md](demo-bookmarklets/github_stars_README.md) for an example.
+
+### Auto-Grouping
+
+Bookmarklets with common prefixes automatically group into collapsible sections:
+
+```
+utils_copy_title.js    ┐
+utils_copy_url.js      ├─ Grouped as "utils"
+utils_scroll_to_top.js ┘
+
+demo_highlight_links.js  ┐
+demo_word_count.js       ├─ Grouped as "demo"
+demo_image_viewer.js     ┘
+```
+
+**Requirements:**
+- 3+ bookmarklets with same prefix
+- Prefix separated by underscore (e.g., `prefix_name.js`)
+- Groups collapse by default to reduce clutter
 
 ## Installation
 
@@ -85,14 +180,15 @@ For example, `bsky_advanced_search.js` pairs with `bsky_advanced_search_README.m
 - Some bookmarklets may fail on pages with strict Content Security Policy (CSP)
 - Requires internet connection to initially fetch bookmarklets (cached afterward)
 
-## Customization
+## Configuration
 
-To use with a different bookmarklets repository, edit `popup.js`:
+The extension can be configured to work with any GitHub repository:
 
-```javascript
-const REPO_OWNER = 'your-username';
-const REPO_NAME = 'your-repo';
-```
+1. Right-click the extension icon → **Options**
+2. Enter your repository details
+3. Click **Save Settings**
+
+Settings are stored locally and persist between browser sessions. The extension caches bookmarklets for 1 hour to reduce API calls.
 
 ## License
 
