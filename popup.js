@@ -587,10 +587,9 @@
   /* Function injected into the page */
   function injectBookmarkletScript(code) {
     try {
-      const script = document.createElement('script');
-      script.textContent = code;
-      (document.head || document.documentElement).appendChild(script);
-      script.remove();
+      /* Execute directly like a real bookmarklet using eval() */
+      /* This works in the global scope, matching how bookmarklets execute from the address bar */
+      eval(code);
     } catch (err) {
       console.error('Bookmarklet error:', err);
       alert('Bookmarklet error: ' + err.message);
